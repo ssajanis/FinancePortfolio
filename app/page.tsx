@@ -1,15 +1,19 @@
-import DashboardCard from "@/components/DashboardCard";
+import { testConnection } from "@/lib/supabase";
 
-export default function DashboardPage() {
+export default async function Page() {
+  let status: string;
+
+  try {
+    const result = await testConnection();
+    status = result.success ? "Database connected ✅" : `Connection error: ${result.error}`;
+  } catch (e) {
+    status = `Connection error: ${e instanceof Error ? e.message : String(e)}`;
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DashboardCard title="Salary" href="/salary" />
-        <DashboardCard title="Expenses" href="/expenses" />
-        <DashboardCard title="Investments" href="/investments" />
-        <DashboardCard title="Loans" href="/loans" />
-      </div>
+      <p>{status}</p>
     </div>
   );
 }
