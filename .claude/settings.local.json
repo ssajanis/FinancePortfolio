@@ -4,7 +4,15 @@
       "Bash(npm run:*)",
       "Bash(npx kill-port:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(pip install:*)",
+      "Bash(py --version)",
+      "Bash(python:*)",
+      "Bash(python3 -m pip install fastapi uvicorn)",
+      "Bash(where python:*)",
+      "Read(//c/Users/Sajan.Vaidhyanathan/AppData/Local/Programs/**)",
+      "Bash(ls /c/Python*)",
+      "Bash(py:*)"
     ]
   }
 }

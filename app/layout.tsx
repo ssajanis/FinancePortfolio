@@ -14,9 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white min-h-screen">
+      <body style={{ backgroundColor: "#0a0f0d", color: "#e8f5e9" }} className="min-h-screen">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-8">{children}</main>
+        <main className="max-w-6xl mx-auto px-8 py-6">{children}</main>
       </body>
     </html>
   );
