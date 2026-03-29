@@ -12,7 +12,8 @@
       "Bash(where python:*)",
       "Read(//c/Users/Sajan.Vaidhyanathan/AppData/Local/Programs/**)",
       "Bash(ls /c/Python*)",
-      "Bash(py:*)"
+      "Bash(py:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

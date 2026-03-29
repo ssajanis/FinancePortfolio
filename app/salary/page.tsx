@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  LineChart, Line,
+  BarChart, Bar,
+  AreaChart, Area,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,6 +67,13 @@ function formatPaise(paise: number): string {
   return "₹" + rupees.toLocaleString("en-IN");
 }
 
+function formatPaiseAxis(paise: number): string {
+  const rupees = paise / 100;
+  if (rupees >= 100000) return "₹" + (rupees / 100000).toFixed(1) + "L";
+  if (rupees >= 1000) return "₹" + (rupees / 1000).toFixed(0) + "K";
+  return "₹" + rupees.toLocaleString("en-IN");
+}
+
 const defaultSalary = (label: string): SalaryIncome => ({
   label,
   baseMonthlySalary: "",
@@ -74,6 +88,9 @@ const inputClass =
 const inputStyle = { backgroundColor: "#0a0f0d", color: "#e8f5e9", border: "1px solid #1e3a2a" };
 const labelClass = "block text-sm mb-1";
 const labelStyle = { color: "#e8f5e9" };
+
+const chartCardStyle = { backgroundColor: "#0d1f17" };
+const tooltipStyle = { backgroundColor: "#0d1f17", border: "1px solid #00c853", color: "#e8f5e9" };
 
 // ---------------------------------------------------------------------------
 // Form sections
@@ -201,7 +218,7 @@ function OtherIncomeSection({
 }
 
 // ---------------------------------------------------------------------------
-// Results
+// Results — Tables
 // ---------------------------------------------------------------------------
 
 function ProjectionTable({
@@ -323,6 +340,114 @@ function ResultsSection({
 }
 
 // ---------------------------------------------------------------------------
+// Charts
+// ---------------------------------------------------------------------------
+
+function ChartsSection({ data }: { data: SalaryResponse }) {
+  const combinedChartData = data.combined.yearly.map((row) => ({
+    year: `Y${row.year}`,
+    Nominal: Math.round(row.nominal_monthly_paise / 100),
+    Real: Math.round(row.real_monthly_paise / 100),
+  }));
+
+  const cumulativeData = data.projections[0].yearly.map((_, yearIdx) => {
+    const entry: Record<string, number | string> = { year: `Y${yearIdx + 1}` };
+    for (const proj of data.projections) {
+      entry[proj.label] = Math.round(
+        proj.yearly.slice(0, yearIdx + 1).reduce((sum, y) => sum + y.nominal_annual_paise, 0) / 100
+      );
+    }
+    return entry;
+  });
+
+  const areaColors = ["#00c853", "#4fc3f7", "#ffb74d"];
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-2xl font-bold mb-6" style={{ color: "#00c853" }}>Visual Projections</h2>
+
+      {data.projections.map((proj) => {
+        const lineData = proj.yearly.map((row) => ({
+          year: `Y${row.year}`,
+          Nominal: Math.round(row.nominal_monthly_paise / 100),
+          Real: Math.round(row.real_monthly_paise / 100),
+        }));
+        return (
+          <div key={proj.label} className="rounded-lg p-5 mb-6" style={chartCardStyle}>
+            <h3 className="text-base font-semibold mb-4" style={{ color: "#00c853" }}>
+              {proj.label} — Monthly Income Projection
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={lineData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1a2f1f" />
+                <XAxis dataKey="year" stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} />
+                <YAxis stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} tickFormatter={formatPaiseAxis} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value: number) => formatPaise(value * 100)}
+                />
+                <Legend wrapperStyle={{ color: "#e8f5e9" }} />
+                <Line type="monotone" dataKey="Nominal" stroke="#00c853" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Real" stroke="#4fc3f7" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      })}
+
+      <div className="rounded-lg p-5 mb-6" style={chartCardStyle}>
+        <h3 className="text-base font-semibold mb-4" style={{ color: "#00c853" }}>
+          Combined Household Income
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={combinedChartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1a2f1f" />
+            <XAxis dataKey="year" stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} />
+            <YAxis stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} tickFormatter={formatPaiseAxis} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(value: number) => formatPaise(value * 100)}
+            />
+            <Legend wrapperStyle={{ color: "#e8f5e9" }} />
+            <Bar dataKey="Nominal" fill="#00c853" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Real" fill="#4fc3f7" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="rounded-lg p-5 mb-6" style={chartCardStyle}>
+        <h3 className="text-base font-semibold mb-4" style={{ color: "#00c853" }}>
+          Cumulative Household Earnings
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={cumulativeData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1a2f1f" />
+            <XAxis dataKey="year" stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} />
+            <YAxis stroke="#e8f5e9" tick={{ fill: "#e8f5e9", fontSize: 12 }} tickFormatter={formatPaiseAxis} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(value: number) => formatPaise(value * 100)}
+            />
+            <Legend wrapperStyle={{ color: "#e8f5e9" }} />
+            {data.projections.map((proj, i) => (
+              <Area
+                key={proj.label}
+                type="monotone"
+                dataKey={proj.label}
+                stackId="1"
+                stroke={areaColors[i % areaColors.length]}
+                fill={areaColors[i % areaColors.length]}
+                fillOpacity={0.4}
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -334,17 +459,14 @@ export default function SalaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SalaryResponse | null>(null);
   const [switchEveryMap, setSwitchEveryMap] = useState<Record<string, number>>({});
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResults(null);
-
+  const buildSources = () => {
     const sources = [];
     const newSwitchEveryMap: Record<string, number> = {};
 
-    // Self
     if (Number(self.baseMonthlySalary) > 0) {
       sources.push({
         label: self.label || "My Income",
@@ -359,7 +481,6 @@ export default function SalaryPage() {
       newSwitchEveryMap[self.label || "My Income"] = Number(self.jobSwitchEvery);
     }
 
-    // Spouse
     if (Number(spouse.baseMonthlySalary) > 0) {
       sources.push({
         label: spouse.label || "Spouse Income",
@@ -374,7 +495,6 @@ export default function SalaryPage() {
       newSwitchEveryMap[spouse.label || "Spouse Income"] = Number(spouse.jobSwitchEvery);
     }
 
-    // Other income
     for (const src of otherSources) {
       if (Number(src.monthlyAmount) > 0) {
         sources.push({
@@ -387,6 +507,18 @@ export default function SalaryPage() {
       }
     }
 
+    return { sources, newSwitchEveryMap };
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setResults(null);
+    setSaveStatus("idle");
+
+    const { sources, newSwitchEveryMap } = buildSources();
+
     if (sources.length === 0) {
       setError("Please enter at least one income source.");
       setLoading(false);
@@ -394,7 +526,7 @@ export default function SalaryPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/calculate/salary", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_PYTHON_API_URL}/calculate/salary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sources }),
@@ -415,6 +547,56 @@ export default function SalaryPage() {
     }
   };
 
+  const handleSave = async () => {
+    const { sources } = buildSources();
+    if (sources.length === 0) return;
+
+    setSaveStatus("saving");
+    setSaveError(null);
+
+    try {
+      const res = await fetch("/api/salary/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sources }),
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSaveStatus("saved");
+    } catch (err) {
+      setSaveStatus("error");
+      setSaveError(err instanceof Error ? err.message : "Save failed");
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!results) return;
+    setPdfLoading(true);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_PYTHON_API_URL}/generate/salary-pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(results),
+      });
+
+      if (!res.ok) throw new Error(`PDF error ${res.status}`);
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "FinanceOS-Salary-Report.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "PDF export failed");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-4xl font-bold mb-2" style={{ color: "#00c853" }}>Salary</h1>
@@ -423,20 +605,52 @@ export default function SalaryPage() {
         <SalarySection title="Your Income (Self)" data={self} onChange={setSelf} />
         <SalarySection title="Spouse Income" data={spouse} onChange={setSpouse} />
         <OtherIncomeSection sources={otherSources} onChange={setOtherSources} />
-        {error && (
-          <p className="mb-4 text-sm" style={{ color: "#ef5350" }}>{error}</p>
+        {error && <p className="mb-4 text-sm" style={{ color: "#ef5350" }}>{error}</p>}
+        {saveStatus === "error" && saveError && (
+          <p className="mb-4 text-sm" style={{ color: "#ef5350" }}>Save failed: {saveError}</p>
         )}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 rounded font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: "#00c853" }}
-        >
-          {loading ? "Calculating..." : "Calculate"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 py-3 rounded font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#00c853" }}
+          >
+            {loading ? "Calculating..." : "Calculate"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saveStatus === "saving"}
+            className="flex-1 py-3 rounded font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{
+              backgroundColor: "transparent",
+              border: "1px solid #00c853",
+              color: saveStatus === "saved" ? "#00c853" : "#e8f5e9",
+            }}
+          >
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved ✅" : "Save"}
+          </button>
+        </div>
       </form>
 
-      {results && <ResultsSection data={results} switchEveryMap={switchEveryMap} />}
+      {results && (
+        <>
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={pdfLoading}
+              className="px-5 py-2 rounded font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#00c853" }}
+            >
+              {pdfLoading ? "Generating PDF..." : "Export PDF"}
+            </button>
+          </div>
+          <ResultsSection data={results} switchEveryMap={switchEveryMap} />
+          <ChartsSection data={results} />
+        </>
+      )}
     </div>
   );
 }
