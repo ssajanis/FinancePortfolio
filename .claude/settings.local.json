@@ -13,7 +13,12 @@
       "Read(//c/Users/Sajan.Vaidhyanathan/AppData/Local/Programs/**)",
       "Bash(ls /c/Python*)",
       "Bash(py:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npx jest:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx playwright:*)"
     ]
   }
 }

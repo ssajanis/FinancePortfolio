@@ -1,43 +1,41 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const links = [
-  { label: "Dashboard", href: "/" },
-  { label: "Salary", href: "/salary" },
-  { label: "Expenses", href: "/expenses" },
-  { label: "Investments", href: "/investments" },
-  { label: "Loans", href: "/loans" },
-];
+  { label: 'Dashboard', href: '/' },
+  { label: 'New Snapshot', href: '/snapshot/new' },
+  { label: 'Profile', href: '/profile' },
+]
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return (
-    <nav style={{ backgroundColor: "#0d1f17", borderBottom: "1px solid #00c853" }}>
-      <div className="max-w-6xl mx-auto px-8 py-4 flex items-center gap-8">
-        <span className="text-xl font-bold" style={{ color: "#00c853" }}>FinanceOS</span>
-        <ul className="flex gap-6">
-          {links.map((link) => {
-            const isActive = pathname === link.href;
+    <nav style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E5DDD0' }}>
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-8">
+        <span className="font-bold text-xl" style={{ color: '#1A1A1A' }}>
+          FinanceOS
+        </span>
+        <div className="flex gap-6">
+          {links.map(({ label, href }) => {
+            const isActive = pathname === href
             return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  style={{
-                    color: isActive ? "#00c853" : "#e8f5e9",
-                    textDecoration: isActive ? "underline" : "none",
-                  }}
-                  className="hover:text-[#00c853] transition-colors"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
+              <Link
+                key={href}
+                href={href}
+                className={`text-sm transition-colors hover:text-black ${
+                  isActive ? 'font-bold underline' : 'font-normal'
+                }`}
+                style={{ color: '#1A1A1A' }}
+              >
+                {label}
+              </Link>
+            )
           })}
-        </ul>
+        </div>
       </div>
     </nav>
-  );
+  )
 }
