@@ -7,12 +7,14 @@ export async function GET() {
   const supabase = createServerClient()
   const { data, error } = await supabase
     .from('snapshots')
-    .select('id, name, created_at')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, snapshots: data ?? [] })
+  return NextResponse.json({ success: true, snapshots: data ?? [] }, {
+    headers: { 'Cache-Control': 'no-store' }
+  })
 }

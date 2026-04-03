@@ -107,7 +107,7 @@ export default function DashboardPage() {
   const [loadingSnapshots, setLoadingSnapshots] = useState(true)
 
   useEffect(() => {
-    fetch('/api/snapshots/list')
+    fetch('/api/snapshots/list', { cache: 'no-store' })
       .then(r => r.json())
       .then(res => {
         setSnapshots(res.snapshots ?? [])
