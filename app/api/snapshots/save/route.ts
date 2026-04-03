@@ -34,9 +34,9 @@ export async function POST(req: NextRequest) {
 
     expense_entries.length > 0
       ? supabase.from('expense_entries').insert(
-          expense_entries.map((e: { category: string; monthly_amount_paise: number }) => ({
+          expense_entries.map((e: { type: string; monthly_amount_paise: number }) => ({
             snapshot_id,
-            category: e.category,
+            type: e.type,
             monthly_amount_paise: e.monthly_amount_paise,
           }))
         )
@@ -47,22 +47,24 @@ export async function POST(req: NextRequest) {
           investment_entries.map((e: { type: string; name: string; current_value_paise: number; monthly_contribution_paise: number }) => ({
             snapshot_id,
             type: e.type,
-            name: e.name,
-            current_value_paise: e.current_value_paise,
-            monthly_contribution_paise: e.monthly_contribution_paise,
+            fields: {
+              name: e.name,
+              current_value_paise: e.current_value_paise,
+              monthly_contribution_paise: e.monthly_contribution_paise,
+            },
           }))
         )
       : Promise.resolve({ error: null }),
 
     loan_entries.length > 0
       ? supabase.from('loan_entries').insert(
-          loan_entries.map((e: { name: string; emi_paise: number; principal_paise: number; tenure_months: number; rate_percent: number }) => ({
+          loan_entries.map((e: { type: string; emi_paise: number; remaining_principal_paise: number; remaining_tenure_months: number; interest_rate_pct: number }) => ({
             snapshot_id,
-            name: e.name,
+            type: e.type,
             emi_paise: e.emi_paise,
-            principal_paise: e.principal_paise,
-            tenure_months: e.tenure_months,
-            rate_percent: e.rate_percent,
+            remaining_principal_paise: e.remaining_principal_paise,
+            remaining_tenure_months: e.remaining_tenure_months,
+            interest_rate_pct: e.interest_rate_pct,
           }))
         )
       : Promise.resolve({ error: null }),

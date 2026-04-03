@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface IncomeRow { type: string; amount: string }
-interface ExpenseRow { category: string; amount: string }
+interface ExpenseRow { type: string; amount: string }
 interface InvestmentRow { type: string; name: string; currentValue: string; monthlyContrib: string }
 interface LoanRow { name: string; emi: string; principal: string; tenure: string; rate: string }
 
 const emptyIncome = (): IncomeRow => ({ type: '', amount: '' })
-const emptyExpense = (): ExpenseRow => ({ category: '', amount: '' })
+const emptyExpense = (): ExpenseRow => ({ type: '', amount: '' })
 const emptyInvestment = (): InvestmentRow => ({ type: '', name: '', currentValue: '', monthlyContrib: '' })
 const emptyLoan = (): LoanRow => ({ name: '', emi: '', principal: '', tenure: '', rate: '' })
 
@@ -58,9 +58,9 @@ export default function NewSnapshotPage() {
               monthly_amount_paise: Math.round(parseFloat(e.amount) * 100),
             })),
           expense_entries: expenses
-            .filter(e => e.category && e.amount)
+            .filter(e => e.type && e.amount)
             .map(e => ({
-              category: e.category,
+              type: e.type,
               monthly_amount_paise: Math.round(parseFloat(e.amount) * 100),
             })),
           investment_entries: investments
@@ -74,11 +74,11 @@ export default function NewSnapshotPage() {
           loan_entries: loans
             .filter(e => e.name)
             .map(e => ({
-              name: e.name,
+              type: e.name,
               emi_paise: Math.round(parseFloat(e.emi || '0') * 100),
-              principal_paise: Math.round(parseFloat(e.principal || '0') * 100),
-              tenure_months: parseInt(e.tenure || '0'),
-              rate_percent: parseFloat(e.rate || '0'),
+              remaining_principal_paise: Math.round(parseFloat(e.principal || '0') * 100),
+              remaining_tenure_months: parseInt(e.tenure || '0'),
+              interest_rate_pct: parseFloat(e.rate || '0'),
             })),
         }),
       })
@@ -179,16 +179,16 @@ export default function NewSnapshotPage() {
         {expenses.map((row, i) => (
           <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
             <div>
-              {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Category</label>}
+              {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Type</label>}
               <input
-                list="expense-categories"
-                value={row.category}
-                onChange={e => updateRow(setExpenses, i, 'category', e.target.value)}
+                list="expense-types"
+                value={row.type}
+                onChange={e => updateRow(setExpenses, i, 'type', e.target.value)}
                 className={inputClass}
                 style={inputStyle}
                 placeholder="e.g. Rent"
               />
-              <datalist id="expense-categories">
+              <datalist id="expense-types">
                 {EXPENSE_CATEGORIES.map(t => <option key={t} value={t} />)}
               </datalist>
             </div>

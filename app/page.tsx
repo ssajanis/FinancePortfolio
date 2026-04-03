@@ -18,31 +18,35 @@ interface IncomeEntry {
 
 interface ExpenseEntry {
   id: string
-  category: string
+  type: string
   monthly_amount_paise: number
 }
 
 interface InvestmentEntry {
   id: string
   type: string
-  name: string
-  current_value_paise: number
-  monthly_contribution_paise: number
+  fields: {
+    name?: string
+    current_value_paise?: number
+    monthly_contribution_paise?: number
+  }
 }
 
 interface LoanEntry {
   id: string
-  name: string
-  principal_paise: number
+  type: string
   emi_paise: number
-  tenure_months: number
-  rate_percent: number
+  remaining_principal_paise: number
+  remaining_tenure_months: number
+  interest_rate_pct: number
 }
 
 interface AiInsight {
   id: string
-  category: string
-  content: string
+  growth_strategy: string | null
+  loan_optimizer: string | null
+  retirement_plan: string | null
+  health_score: number | null
 }
 
 interface SnapshotData {
@@ -131,14 +135,14 @@ export default function DashboardPage() {
     ? data.loan_entries.reduce((s, l) => s + l.emi_paise, 0)
     : 0
   const monthlyInvestment = data
-    ? data.investment_entries.reduce((s, i) => s + i.monthly_contribution_paise, 0)
+    ? data.investment_entries.reduce((s, i) => s + (i.fields?.monthly_contribution_paise ?? 0), 0)
     : 0
   const monthlySurplus = monthlyIncome - monthlyExpenses - totalEmi
   const totalLoans = data
-    ? data.loan_entries.reduce((s, l) => s + l.principal_paise, 0)
+    ? data.loan_entries.reduce((s, l) => s + l.remaining_principal_paise, 0)
     : 0
   const totalInvestments = data
-    ? data.investment_entries.reduce((s, i) => s + i.current_value_paise, 0)
+    ? data.investment_entries.reduce((s, i) => s + (i.fields?.current_value_paise ?? 0), 0)
     : 0
 
   const surplusRatio = monthlyIncome > 0 ? monthlySurplus / monthlyIncome : 0
@@ -149,8 +153,7 @@ export default function DashboardPage() {
     ? calcHealthScore(monthlyIncome, monthlyExpenses, totalEmi, monthlyInvestment, monthlySurplus)
     : null
 
-  const getInsight = (category: string) =>
-    data?.ai_insights.find(i => i.category === category)
+  const insight = data?.ai_insights?.[0] ?? null
 
   if (loadingSnapshots) {
     return <p className="text-sm text-gray-500">Loading...</p>
@@ -255,7 +258,7 @@ export default function DashboardPage() {
                 <ul className="space-y-2">
                   {data.expense_entries.map(e => (
                     <li key={e.id} className="flex justify-between text-sm">
-                      <span>{e.category}</span>
+                      <span>{e.type}</span>
                       <span className="font-medium">{formatPaise(e.monthly_amount_paise)}/mo</span>
                     </li>
                   ))}
@@ -272,8 +275,8 @@ export default function DashboardPage() {
                 <ul className="space-y-2">
                   {data.investment_entries.map(e => (
                     <li key={e.id} className="flex justify-between text-sm">
-                      <span>{e.name} <span className="text-gray-400">({e.type})</span></span>
-                      <span className="font-medium">{formatCrLakh(e.current_value_paise)}</span>
+                      <span>{e.fields?.name ?? e.type} <span className="text-gray-400">({e.type})</span></span>
+                      <span className="font-medium">{formatCrLakh(e.fields?.current_value_paise ?? 0)}</span>
                     </li>
                   ))}
                 </ul>
@@ -299,10 +302,10 @@ export default function DashboardPage() {
                     <tbody className="space-y-1">
                       {data.loan_entries.map(l => (
                         <tr key={l.id} className="border-b last:border-0" style={{ borderColor: '#F5F0E8' }}>
-                          <td className="py-1.5">{l.name}</td>
+                          <td className="py-1.5">{l.type}</td>
                           <td className="py-1.5 text-right">{formatPaise(l.emi_paise)}</td>
-                          <td className="py-1.5 text-right">{formatCrLakh(l.principal_paise)}</td>
-                          <td className="py-1.5 text-right">{l.tenure_months}m</td>
+                          <td className="py-1.5 text-right">{formatCrLakh(l.remaining_principal_paise)}</td>
+                          <td className="py-1.5 text-right">{l.remaining_tenure_months}m</td>
                         </tr>
                       ))}
                     </tbody>
@@ -378,21 +381,22 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['Growth Strategy', 'Loan Optimizer', 'Retirement Plan'].map(category => {
-                const insight = getInsight(category)
-                return (
-                  <div
-                    key={category}
-                    className="bg-white rounded-2xl p-5 shadow-sm"
-                    style={{ border: '1px solid #E5DDD0' }}
-                  >
-                    <h3 className="font-medium mb-2">{category}</h3>
-                    <p className="text-sm text-gray-500">
-                      {insight ? insight.content : 'Generating insights...'}
-                    </p>
-                  </div>
-                )
-              })}
+              {([
+                { label: 'Growth Strategy', key: 'growth_strategy' },
+                { label: 'Loan Optimizer', key: 'loan_optimizer' },
+                { label: 'Retirement Plan', key: 'retirement_plan' },
+              ] as const).map(({ label, key }) => (
+                <div
+                  key={key}
+                  className="bg-white rounded-2xl p-5 shadow-sm"
+                  style={{ border: '1px solid #E5DDD0' }}
+                >
+                  <h3 className="font-medium mb-2">{label}</h3>
+                  <p className="text-sm text-gray-500">
+                    {insight?.[key] ?? 'Generating insights...'}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </>
