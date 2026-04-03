@@ -12,16 +12,14 @@ interface Snapshot {
 
 interface IncomeEntry {
   id: string
-  source: string
-  amount_paise: number
-  frequency: string
+  type: string
+  monthly_amount_paise: number
 }
 
 interface ExpenseEntry {
   id: string
   category: string
-  amount_paise: number
-  frequency: string
+  monthly_amount_paise: number
 }
 
 interface InvestmentEntry {
@@ -54,15 +52,6 @@ interface SnapshotData {
   investment_entries: InvestmentEntry[]
   loan_entries: LoanEntry[]
   ai_insights: AiInsight[]
-}
-
-function toMonthly(amount: number, frequency: string): number {
-  switch (frequency) {
-    case 'annual': return Math.round(amount / 12)
-    case 'quarterly': return Math.round(amount / 3)
-    case 'weekly': return amount * 4
-    default: return amount
-  }
 }
 
 function calcHealthScore(
@@ -133,10 +122,10 @@ export default function DashboardPage() {
   }, [selectedId])
 
   const monthlyIncome = data
-    ? data.income_entries.reduce((s, e) => s + toMonthly(e.amount_paise, e.frequency), 0)
+    ? data.income_entries.reduce((s, e) => s + e.monthly_amount_paise, 0)
     : 0
   const monthlyExpenses = data
-    ? data.expense_entries.reduce((s, e) => s + toMonthly(e.amount_paise, e.frequency), 0)
+    ? data.expense_entries.reduce((s, e) => s + e.monthly_amount_paise, 0)
     : 0
   const totalEmi = data
     ? data.loan_entries.reduce((s, l) => s + l.emi_paise, 0)
@@ -249,8 +238,8 @@ export default function DashboardPage() {
                 <ul className="space-y-2">
                   {data.income_entries.map(e => (
                     <li key={e.id} className="flex justify-between text-sm">
-                      <span>{e.source}</span>
-                      <span className="font-medium">{formatPaise(e.amount_paise)}/{e.frequency}</span>
+                      <span>{e.type}</span>
+                      <span className="font-medium">{formatPaise(e.monthly_amount_paise)}/mo</span>
                     </li>
                   ))}
                 </ul>
@@ -267,7 +256,7 @@ export default function DashboardPage() {
                   {data.expense_entries.map(e => (
                     <li key={e.id} className="flex justify-between text-sm">
                       <span>{e.category}</span>
-                      <span className="font-medium">{formatPaise(e.amount_paise)}/{e.frequency}</span>
+                      <span className="font-medium">{formatPaise(e.monthly_amount_paise)}/mo</span>
                     </li>
                   ))}
                 </ul>
